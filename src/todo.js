@@ -1,3 +1,5 @@
+'use strict';
+
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
     factory(module.exports, require('d3'))
@@ -5,38 +7,134 @@
     factory(root, root.d3)
   }
 }(this, function (exports, d3) {
+  // change the base d3 abstraction!
+  d3.selection.prototype.with = d3.selection.prototype.call
+  d3.selection.prototype.apply = function (...args) {
+    var callback = args[0]
+    args[0] = this
+    return callback.apply(null, args)
+  }
+
   var todoWidget = function (config) {
     var items = []
     var uid = 0
-    var list
+    var todoLines
 
-    var init = function () {
+    (function () {
       var container = d3.select(config.container)
-                .append('div')
-                .attr('class', 'todo-container')
+          .append('div')
+          .attr('class', 'todo-container')
 
-      var itemBox = container.append('input')
-                .attr('class', 'item-input')
-                .on('keypress', function () {
-                  if (d3.event.which === 13) {
-                    addItem(this.value)
-                  }
-                })
+      var itemBox = container.apply(inputBox)
 
-      container.append('button')
-                .text('Add')
-                .attr('class', 'add-button')
-                .on('click', function () {
-                  addItem(itemBox.property('value'))
-                })
-
-      list = container.append('ul')
-                .attr('class', 'item-list')
+      todoLines = container
+        .with(addButtonFor(itemBox))
+        .apply(todoList)
 
       return this
-    }
 
-    init()
+      function inputBox (container) {
+        return container.append('input')
+          .attr('class', 'item-input')
+          .on('keypress', function () {
+            if (d3.event.which === 13) {
+              addItem(this.value)
+            }
+          })
+      }
+
+      function addButtonFor (input) {
+        return function addButton (container) {
+          return container.append('button')
+            .text('Add')
+            .attr('class', 'add-button')
+            .on('click', function () {
+              addItem(input.property('value'))
+            })
+        }
+      }
+
+      function todoList (container) {
+        return container.append('ul')
+          .attr('class', 'item-list')
+          .selectAll()
+      }
+
+      function addItem (itemText) {
+        items.push({
+          label: itemText,
+          isDone: false,
+          uid: uid++
+        })
+        renderList()
+
+        return this
+      }
+    })()
+
+    function renderList () {
+      var binding = todoLines.data(items, function (d) {
+        return d.uid
+      })
+
+      var newTodoLines = binding.enter()
+                .apply(todoLine)
+
+      todoLines = binding.merge(newTodoLines)
+                .classed('done', function (d) {
+                  return d.isDone
+                })
+
+      binding.exit().remove()
+
+      return this
+
+      function todoLine (container) {
+        return container.append('li')
+          .attr('class', 'item')
+          .with(doneToggle)
+          .with(label)
+          .with(removeButton)
+
+        function doneToggle (line) {
+          return line.append('input')
+            .attr('type', 'checkbox')
+            .attr('class', 'state-button')
+            .on('click', setItemState)
+
+          function setItemState (item) {
+            item.isDone = !item.isDone
+            renderList()
+
+            return this
+          }
+        }
+
+        function label (line) {
+          return line.append('span')
+            .attr('class', 'label')
+            .text(function (d) {
+              return d.label
+            })
+        }
+
+        function removeButton (line) {
+          return line.append('span')
+            .attr('class', 'delete-button')
+            .html('&#10060')
+            .on('click', removeItem)
+
+          function removeItem (item) {
+            items = items.filter(function (d) {
+              return d.uid !== item.uid
+            })
+            renderList()
+
+            return this
+          }
+        }
+      }
+    }
 
     var setItems = function (_items) {
       items = _items.map(function (d) {
@@ -47,66 +145,6 @@
         }
       })
       renderList()
-
-      return this
-    }
-
-    var addItem = function (itemText) {
-      items.push({
-        label: itemText,
-        isDone: false,
-        uid: uid++
-      })
-      renderList()
-
-      return this
-    }
-
-    var removeItem = function (item) {
-      var itemIndex = items.map(function (d) {
-        return d.uid
-      })
-                .indexOf(item.uid)
-      if (itemIndex > -1) {
-        items.splice(itemIndex, 1)
-        renderList()
-      }
-
-      return this
-    }
-
-    var setItemState = function (item) {
-      item.isDone = !item.isDone
-      renderList()
-
-      return this
-    }
-
-    var renderList = function () {
-      var item = list.selectAll('li')
-                .data(items, function (d) {
-                  return d.uid
-                })
-      var itemEnter = item.enter().append('li')
-                .attr('class', 'item')
-      itemEnter.append('input')
-                .attr('type', 'checkbox')
-                .attr('class', 'state-button')
-                .on('click', setItemState)
-      itemEnter.append('span')
-                .attr('class', 'label')
-                .text(function (d) {
-                  return d.label
-                })
-      itemEnter.append('span')
-                .attr('class', 'delete-button')
-                .html('&#10060;')
-                .on('click', removeItem)
-      itemEnter.merge(item)
-                .classed('done', function (d) {
-                  return d.isDone
-                })
-      item.exit().remove()
 
       return this
     }
