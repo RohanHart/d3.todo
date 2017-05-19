@@ -22,8 +22,6 @@
 
     (function () {
       var container = d3.select(config.container)
-          .append('div')
-          .attr('class', 'todo-container')
 
       var itemBox = container.apply(inputBox)
 
@@ -34,8 +32,7 @@
       return this
 
       function inputBox (container) {
-        return container.append('input')
-          .attr('class', 'item-input')
+        return container.select('#input')
           .on('keypress', function () {
             if (d3.event.which === 13) {
               addItem(this.value)
@@ -45,9 +42,7 @@
 
       function addButtonFor (input) {
         return function addButton (container) {
-          return container.append('button')
-            .text('Add')
-            .attr('class', 'add-button')
+          return container.select('#add')
             .on('click', function () {
               addItem(input.property('value'))
             })
@@ -55,9 +50,8 @@
       }
 
       function todoList (container) {
-        return container.append('ul')
-          .attr('class', 'item-list')
-          .selectAll()
+        return container.select('#list')
+          .selectAll('*')
       }
 
       function addItem (itemText) {
@@ -74,7 +68,7 @@
 
     function renderList () {
       var binding = todoLines.data(items, function (d) {
-        return d.uid
+        return d ? d.uid : d
       })
 
       var newTodoLines = binding.enter()

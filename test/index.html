@@ -5,6 +5,20 @@
   <link href="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css" rel="stylesheet" />
 </head>
 <body>
+  <div class="todo">
+    <div class="todo-container">
+      <input id="input" class="item-input">
+      <button id="add" class="add-button">Add</button>
+      <ul id="list" class="item-list">
+        <li class="item">
+          <input type="checkbox" class="state-button">
+          <span class="label">Sample todo</span>
+          <span class="delete-button">❌</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
   <div id="mocha"></div>
 
   <script src="https://d3js.org/d3.v4.min.js"></script>
