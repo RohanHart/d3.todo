@@ -7,15 +7,10 @@
     factory(root, root.d3)
   }
 }(this, function (exports, d3) {
-  // change the base d3 abstraction!
+  // rename the base d3 abstraction!
   d3.selection.prototype.with = d3.selection.prototype.call
-  d3.selection.prototype.apply = function (...args) {
-    var callback = args[0]
-    args[0] = this
-    return callback.apply(null, args)
-  }
 
-  var todoWidget = function (config) {
+  function todoWidget (config) {
     var items = []
     var uid = 0
     var todoLines
@@ -23,11 +18,10 @@
     (function () {
       var container = d3.select(config.container)
 
-      var itemBox = container.apply(inputBox)
+      container.with(addButtonFor(
+        inputBox(container)))
 
-      todoLines = container
-        .with(addButtonFor(itemBox))
-        .apply(todoList)
+      todoLines = todoList(container)
 
       return this
 
@@ -51,7 +45,7 @@
 
       function todoList (container) {
         return container.select('#list')
-          .selectAll('*')
+          .selectAll('*')  // will replace all the existing nodes
       }
 
       function addItem (itemText) {
@@ -68,16 +62,15 @@
 
     function renderList () {
       var binding = todoLines.data(items, function (d) {
-        return d ? d.uid : d
+        return d ? d.uid : d  // d will not be bound if the node was not created by d3 which is the case for the templated <li>
       })
 
-      var newTodoLines = binding.enter()
-                .apply(todoLine)
+      var newTodoLines = todoLine(binding.enter())
 
       todoLines = binding.merge(newTodoLines)
-                .classed('done', function (d) {
-                  return d.isDone
-                })
+        .classed('done', function (d) {
+          return d.isDone
+        })
 
       binding.exit().remove()
 
@@ -130,7 +123,7 @@
       }
     }
 
-    var setItems = function (_items) {
+    function setItems (_items) {
       items = _items.map(function (d) {
         return {
           label: d,
