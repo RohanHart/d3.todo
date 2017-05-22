@@ -1,21 +1,21 @@
 var expect = chai.expect
 
 describe('Todo', function () {
-  var container = document.querySelector('.todo-container')
-  var input = container.querySelector('input.item-input')
-  var button = container.querySelector('button')
-  var todo
+  var base = document.querySelector('.todo')
+  var template = base.innerHTML
+  var container, input, button, todo
 
   beforeEach(function () {
+    container = document.querySelector('.todo-container')
+    input = container.querySelector('input.item-input')
+    button = container.querySelector('button')
     todo = todoWidget({
       container: container
     })
-
   })
 
   afterEach(function () {
-    container.querySelector('#list')
-      .innerHTML = ''
+    base.innerHTML = template
   })
 
   it('should initialize with an input box and an "add" button', function () {
