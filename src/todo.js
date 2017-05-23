@@ -33,8 +33,6 @@
       todoLines = todoList(container)
       lineTemplate = todoLines.asTemplate()
 
-      return this
-
       function inputBox (container) {
         return container.select('#input')
           .on('keypress', function () {
@@ -65,8 +63,6 @@
           uid: uid++
         })
         renderList()
-
-        return this
       }
     })()
 
@@ -78,13 +74,9 @@
       var newTodoLines = todoLine(binding.enter())
 
       todoLines = binding.merge(newTodoLines)
-        .classed('done', function (d) {
-          return d.isDone
-        })
+        .with(style)
 
       binding.exit().remove()
-
-      return this
 
       function todoLine (container) {
         return container.append(lineTemplate)
@@ -99,8 +91,6 @@
           function toggleDone (item) {
             item.isDone = !item.isDone
             renderList()
-
-            return this
           }
         }
 
@@ -120,10 +110,14 @@
               return d.uid !== item.uid
             })
             renderList()
-
-            return this
           }
         }
+      }
+
+      function style (line) {
+        line.classed('done', function (d) {
+          return d.isDone
+        })
       }
     }
 
